@@ -3,7 +3,7 @@ on:
   schedule: [cron: 0 0 * * *]
   workflow_dispatch:
 jobs:
-  update-submodules:
+  update-openssl:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -13,18 +13,28 @@ jobs:
         submodules: true
         fetch-depth: 0
         token: ${{secrets.PUSH_TOKEN}}
-    - uses: fregante/setup-git-user@v2
-    - name: Update submodules
+    - name: Configure git committer
+      uses: fregante/setup-git-user@v2
+    - name: Update FFMPEG
       run: |
         cd FFmpeg
         currenttag=$(git describe --tags)
+        echo "Current version: $currenttag"
         latesttag=$(git tag | grep -E '^n[0-9]\d*\.[0-9]\d*(\.[0-9]\d*)?$' | tail -n1)
+        echo "Latest version: $latesttag"
         if [[ "$currenttag" != "$latesttag" ]]; then
+          echo "Updating repo..."
+          echo "- checking out latest tag in submodule"
           git checkout "$latesttag"
           cd ../
+          echo "- committing changes"
           git commit -a -m "Update builds to $latesttag"
-          git show --raw
+          echo "- creating tag in build repo"
           git tag "$latesttag"
+          echo "- pushing submodule update"
           git push
+          echo "- pushing tag to build repo"
           git push origin $latesttag
+        else
+          echo "Repo is up-to-date"
         fi
