@@ -23,7 +23,7 @@ jobs:
     - name: Download prebuilt OpenSSL binaries
       uses: robinraju/release-downloader@v1.8
       with:
-        repository: ${{ github.repository_owner }}/openssl-build
+        repository: ${{ github.repository_owner }}/openssl
         latest: true
         fileName: "openssl-*-windows-x86_64-lib.zip"
         out-file-path: FFmpeg
