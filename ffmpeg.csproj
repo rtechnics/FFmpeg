@@ -2,9 +2,9 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <Version>1.0.0</Version>
-    <Authors>Ethan Reece</Authors>
+    <Authors>R-Technics</Authors>
     <Company>R-Technics</Company>
-    <RepositoryUrl>https://github.com/ethanreece-rtechnics/ffmpeg-build/</RepositoryUrl>
+    <RepositoryUrl>https://github.com/rtechnics/ffmpeg/</RepositoryUrl>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
   <ItemGroup>
