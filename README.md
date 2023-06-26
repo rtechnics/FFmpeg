@@ -1,8 +1,8 @@
-# FFMPEG Windows/NuGet build system powered by GitHub Actions
+# FFmpeg Windows/NuGet build system powered by GitHub Actions
 
 ## About
-- `.github/workflows/build.yml` - Builds the FFMPEG git submodule every time a tag is added.
-- `.github/workflows/update-ffmpeg.yml` - Checks for a new FFMPEG release tag daily and updates the submodule and adds a new release tag, triggering the Build workflow.
+- `.github/workflows/build.yml` - Builds the FFmpeg git submodule every time a tag is added.
+- `.github/workflows/update-ffmpeg.yml` - Checks for a new FFmpeg release tag daily and updates the submodule and adds a new release tag, triggering the Build workflow.
 
 ## How to configure
 1. Enable the GitHub Actions workflows
