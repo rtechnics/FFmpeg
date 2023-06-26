@@ -3,7 +3,6 @@ on:
   push:
     tags:        
       - '*'
-  workflow_dispatch:
 jobs:
   build-windows-x86_64:
     runs-on: ubuntu-latest
