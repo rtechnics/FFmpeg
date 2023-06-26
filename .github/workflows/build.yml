@@ -23,6 +23,7 @@ jobs:
       uses: robinraju/release-downloader@v1.8
       with:
         repository: ${{ github.repository_owner }}/openssl
+        token: ${{secrets.PUSH_TOKEN}}
         latest: true
         fileName: "openssl-*-windows-x86_64-lib.zip"
         out-file-path: FFmpeg
