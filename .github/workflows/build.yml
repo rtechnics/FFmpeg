@@ -1,0 +1,84 @@
+name: Build
+on:
+  push:
+    tags:        
+      - '*'
+  workflow_dispatch:
+jobs:
+  build-windows-x86_64:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    defaults:
+      run:
+        working-directory: ./FFmpeg
+    steps:
+    - name: Clone FFmpeg submodule
+      uses: actions/checkout@v3
+      with:
+        submodules: true
+    - name: Install compiler and FFmpeg dependencies
+      run: | 
+        sudo apt update
+        sudo apt install cmake libass-dev libgnutls28-dev libmp3lame-dev libsdl2-dev libva-dev libvdpau-dev libvorbis-dev libxcb-xfixes0-dev meson ninja-build yasm mingw-w64 mingw-w64-tools libunistring-dev
+    - name: Download prebuilt OpenSSL binaries
+      uses: robinraju/release-downloader@v1.8
+      with:
+        repository: ${{ github.repository_owner }}/openssl-build
+        latest: true
+        fileName: "openssl-*-windows-x86_64-lib.zip"
+        out-file-path: FFmpeg
+        extract: true
+    - name: Configure source
+      run: |
+        mkdir build
+        ./configure --arch=x86_64 --target-os=mingw64 --cross-prefix=x86_64-w64-mingw32- --enable-cross-compile --prefix=build --disable-doc --enable-openssl --extra-cflags="-Iopenssl-windows-x86_64/include" --extra-ldflags="-Lopenssl-windows-x86_64/lib64"
+    - name: Compile source
+      run: make
+    - name: Copy FFmpeg build
+      run: make install
+    - name: Upload build as artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: ffmpeg-windows-x86_64
+        path: FFmpeg/build
+  release:
+    permissions:
+      contents: write
+      packages: write
+    runs-on: ubuntu-latest
+    needs: [build-windows-x86_64]
+    timeout-minutes: 30
+    steps:
+    - name: Clone build repo
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - name: Get current version
+      id: version
+      run: echo "current=$(git describe --tags | cut -c 2-)" >> "$GITHUB_OUTPUT"
+    - name: Download all builds
+      uses: actions/download-artifact@v3
+    - name: Setup dotnet
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 3.1.x
+    - name: Create NuGet package
+      run: dotnet build --configuration release -o nuget /p:Version=${{ steps.version.outputs.current }}
+    - name: Set push URL to GitHub packages
+      run: dotnet nuget add source --username ${{ github.repository_owner }} --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
+    - name: Push NuGet package
+      run: dotnet nuget push nuget/ffmpeg.*.nupkg --no-symbols --skip-duplicate --api-key $NUGET_AUTH_TOKEN --source "github"
+      env:
+        NUGET_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Package FFmpeg as Zip
+      run: |
+        zip -r -j ffmpeg-${{ steps.version.outputs.current }}-windows-x86_64.zip ffmpeg-windows-x86_64/bin
+        zip -r ffmpeg-${{ steps.version.outputs.current }}-windows-x86_64-lib.zip ffmpeg-windows-x86_64
+    - name: Create GitHub release with packages
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ steps.previoustag.outputs.tag }}
+        files: |
+          nuget/ffmpeg.*.nupkg
+          ffmpeg-${{ steps.version.outputs.current }}-windows-x86_64.zip
+          ffmpeg-${{ steps.version.outputs.current }}-windows-x86_64-lib.zip

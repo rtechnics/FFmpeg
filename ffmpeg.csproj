@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">    
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Version>1.0.0</Version>
+    <Authors>Ethan Reece</Authors>
+    <Company>R-Technics</Company>
+    <RepositoryUrl>https://github.com/ethanreece-rtechnics/ffmpeg-build/</RepositoryUrl>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+  </PropertyGroup>
+  <ItemGroup>
+<Content Include="ffmpeg-windows-x86_64\**\*.*">
+  <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
+  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+</Content>
+</ItemGroup>
+</Project>

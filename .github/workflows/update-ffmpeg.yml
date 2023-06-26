@@ -1,0 +1,30 @@
+name: Update FFMPEG Submodule
+on:
+  schedule: [cron: 0 0 * * *]
+  workflow_dispatch:
+jobs:
+  update-submodules:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      with:
+        submodules: true
+        fetch-depth: 0
+        token: ${{secrets.PUSH_TOKEN}}
+    - uses: fregante/setup-git-user@v2
+    - name: Update submodules
+      run: |
+        cd FFmpeg
+        currenttag=$(git describe --tags)
+        latesttag=$(git tag | grep -E '^n[0-9]\d*\.[0-9]\d*(\.[0-9]\d*)?$' | tail -n1)
+        if [[ "$currenttag" != "$latesttag" ]]; then
+          git checkout "$latesttag"
+          cd ../
+          git commit -a -m "Update builds to $latesttag"
+          git show --raw
+          git tag "$latesttag"
+          git push
+          git push origin $latesttag
+        fi
