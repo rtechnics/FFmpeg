@@ -12,6 +12,6 @@
 
 ## How to use the NuGet package
 1. In your account's Developer Settings menu, create a personal access token with the `read:packages` permission
-2. Add your GitHub NuGet repo to your dotnet project - `https://nuget.pkg.github.com/<your-github-username-here>/index.json` - and log in using the access token. You can do this using the Visual Studio GUI or the command line:
-`dotnet nuget add source --username <your-github-username-here> --password <your-github-access-token-here> --store-password-in-clear-text --name github "https://nuget.pkg.github.com/<your-github-username-here>/index.json"`
+2. Add your GitHub NuGet repo to your dotnet project - `https://nuget.pkg.github.com/rtechnics/index.json` - and log in using the access token. You can do this using the Visual Studio GUI or the command line:
+`dotnet nuget add source --username <your-github-username-here> --password <your-github-access-token-here> --store-password-in-clear-text --name github "https://nuget.pkg.github.com/rtechnics/index.json"`
 3. Download the package either using Visual Studio or `dotnet add package ffmpeg`
