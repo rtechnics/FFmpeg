@@ -1,2 +1,7 @@
-obj/
-bin/
+ffmpeg-windows-i686-static/
+ffmpeg-windows-x86_64/
+WiX/bin/
+WiX/obj/
+NuGet/bin/
+NuGet/obj/
+.vs/

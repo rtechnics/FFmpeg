@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+	<Product Id="*" Name="FFmpeg" Language="1033" Version="1.0.0.0" Manufacturer="R-Technics" UpgradeCode="36264ec2-e802-4f52-986c-868be4ac48ac">
+		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
+
+		<MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+		<MediaTemplate />
+
+		<Feature Id="ProductFeature" Title="FFmpeg" Level="1">
+			<ComponentGroupRef Id="ProductComponents" />
+		</Feature>
+	</Product>
+
+	<Fragment>
+		<Directory Id="TARGETDIR" Name="SourceDir">
+			<Directory Id="ProgramFilesFolder">
+				<Directory Id="COMPANYFOLDER" Name="R-Technics">
+					<Directory Id="INSTALLFOLDER" Name="FFmpeg">
+						<Directory Id="BINFOLDER" Name="bin" />
+					</Directory>
+				</Directory>
+			</Directory>
+		</Directory>
+	</Fragment>
+
+	<Fragment>
+		<ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+			<Component Id="ffmpeg" Guid="3153C8A9-A470-4583-9A3C-9DB43BEC5898">
+				<File Id="ffmpeg" Source="..\ffmpeg-windows-i686-static\bin\ffmpeg.exe" KeyPath="yes" />
+			</Component>
+			<Component Id="ffplay" Guid="15E744AC-7DA2-435C-BB8D-1BF20C4C874A">
+				<File Id="ffplay" Source="..\ffmpeg-windows-i686-static\bin\ffplay.exe" KeyPath="yes" />
+			</Component>
+			<Component Id="ffprobe" Guid="D4DF2A9A-6069-430E-B715-E387905F5DA5">
+				<File Id="ffprobe" Source="..\ffmpeg-windows-i686-static\bin\ffprobe.exe" KeyPath="yes" />
+			</Component>
+		</ComponentGroup>
+	</Fragment>
+</Wix>
