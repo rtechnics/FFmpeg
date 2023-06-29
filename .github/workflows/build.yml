@@ -41,12 +41,49 @@ jobs:
       with:
         name: ffmpeg-windows-x86_64
         path: FFmpeg/build
+  build-windows-i686-static:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    defaults:
+      run:
+        working-directory: ./FFmpeg
+    steps:
+    - name: Clone FFmpeg submodule
+      uses: actions/checkout@v3
+      with:
+        submodules: true
+    - name: Install compiler and FFmpeg dependencies
+      run: | 
+        sudo apt update
+        sudo apt install cmake libass-dev libgnutls28-dev libmp3lame-dev libsdl2-dev libva-dev libvdpau-dev libvorbis-dev libxcb-xfixes0-dev meson ninja-build yasm mingw-w64 mingw-w64-tools libunistring-dev
+    - name: Download prebuilt OpenSSL binaries
+      uses: robinraju/release-downloader@v1.8
+      with:
+        repository: ${{ github.repository_owner }}/openssl
+        token: ${{secrets.PUSH_TOKEN}}
+        latest: true
+        fileName: "openssl-*-windows-i686-lib.zip"
+        out-file-path: FFmpeg
+        extract: true
+    - name: Configure source
+      run: |
+        mkdir build
+        ./configure --arch=i686 --target-os=mingw --cross-prefix=i686-w64-mingw32- --enable-cross-compile --prefix=build --disable-doc --enable-openssl --extra-cflags="-Iopenssl-windows-i686/include" --extra-ldflags="-Lopenssl-windows-i686/lib64" --enable-static --disable-shared
+    - name: Compile source
+      run: make
+    - name: Copy FFmpeg build
+      run: make install
+    - name: Upload build as artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: ffmpeg-windows-i686-static
+        path: FFmpeg/build
   release:
     permissions:
       contents: write
       packages: write
     runs-on: ubuntu-latest
-    needs: [build-windows-x86_64]
+    needs: [build-windows-x86_64, build-windows-i686-static]
     timeout-minutes: 30
     steps:
     - name: Clone build repo
@@ -74,6 +111,8 @@ jobs:
       run: |
         zip -r -j ffmpeg-${{ steps.version.outputs.current }}-windows-x86_64.zip ffmpeg-windows-x86_64/bin
         zip -r ffmpeg-${{ steps.version.outputs.current }}-windows-x86_64-lib.zip ffmpeg-windows-x86_64
+        zip -r -j ffmpeg-${{ steps.version.outputs.current }}-windows-i686-static.zip ffmpeg-windows-i686-static/bin
+        zip -r ffmpeg-${{ steps.version.outputs.current }}-windows-i686-static-lib.zip ffmpeg-windows-i686-static
     - name: Create GitHub release with packages
       uses: softprops/action-gh-release@v1
       with:
@@ -82,3 +121,5 @@ jobs:
           nuget/ffmpeg.*.nupkg
           ffmpeg-${{ steps.version.outputs.current }}-windows-x86_64.zip
           ffmpeg-${{ steps.version.outputs.current }}-windows-x86_64-lib.zip
+          ffmpeg-${{ steps.version.outputs.current }}-windows-i686-static.zip
+          ffmpeg-${{ steps.version.outputs.current }}-windows-i686-static-lib.zip
