@@ -78,12 +78,35 @@ jobs:
       with:
         name: ffmpeg-windows-i686-static
         path: FFmpeg/build
-  release:
+  create-windows-i686-static-installer-wix:
+    runs-on: windows-latest
+    needs: [build-windows-x86_64, build-windows-i686-static]
+    steps:
+    - name: Clone build repo
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v1.0.2
+    - name: Get current version
+      id: version
+      run: |
+        $latestTag = git describe --tags
+        $current = $latestTag.Substring(1)
+        echo "current=$current" >> $env:GITHUB_OUTPUT
+    - name: Build WiX Project
+      run: msbuild Wix/ffmpeg.installer.wixproj /p:Configuration=Release /p:Version=${{ steps.version.outputs.current }}
+    - name: Upload installer as artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: ffmpeg-windows-i686-static-installer
+        path: WiX/bin/Release
+  create-release:
     permissions:
       contents: write
       packages: write
     runs-on: ubuntu-latest
-    needs: [build-windows-x86_64, build-windows-i686-static]
+    needs: [build-windows-x86_64, build-windows-i686-static, create-windows-i686-static-installer-wix]
     timeout-minutes: 30
     steps:
     - name: Clone build repo
@@ -100,26 +123,30 @@ jobs:
       with:
         dotnet-version: 3.1.x
     - name: Create NuGet package
-      run: dotnet build --configuration release -o nuget /p:Version=${{ steps.version.outputs.current }}
-    - name: Set push URL to GitHub packages
-      run: dotnet nuget add source --username ${{ github.repository_owner }} --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
+      run: |
+        cd NuGet
+        dotnet build --configuration release -o nuget /p:Version=${{ steps.version.outputs.current }}
     - name: Push NuGet package
-      run: dotnet nuget push nuget/ffmpeg.*.nupkg --no-symbols --skip-duplicate --api-key $NUGET_AUTH_TOKEN --source "github"
+      run: |
+        cd NuGet
+        dotnet nuget add source --username ${{ github.repository_owner }} --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
+        dotnet nuget push nuget/ffmpeg.*.nupkg --no-symbols --skip-duplicate --api-key $NUGET_AUTH_TOKEN --source "github"
       env:
         NUGET_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    - name: Package FFmpeg as Zip
+    - name: Package FFmpeg for release
       run: |
         zip -r -j ffmpeg-${{ steps.version.outputs.current }}-windows-x86_64.zip ffmpeg-windows-x86_64/bin
         zip -r ffmpeg-${{ steps.version.outputs.current }}-windows-x86_64-lib.zip ffmpeg-windows-x86_64
         zip -r -j ffmpeg-${{ steps.version.outputs.current }}-windows-i686-static.zip ffmpeg-windows-i686-static/bin
         zip -r ffmpeg-${{ steps.version.outputs.current }}-windows-i686-static-lib.zip ffmpeg-windows-i686-static
+        mv ffmpeg-windows-i686-static-installer/ffmpeg_installer.msi ffmpeg-${{ steps.version.outputs.current }}-windows-i686-static-installer.msi
     - name: Create GitHub release with packages
       uses: softprops/action-gh-release@v1
       with:
-        tag_name: ${{ steps.previoustag.outputs.tag }}
         files: |
-          nuget/ffmpeg.*.nupkg
+          NuGet/nuget/ffmpeg.*.nupkg
           ffmpeg-${{ steps.version.outputs.current }}-windows-x86_64.zip
           ffmpeg-${{ steps.version.outputs.current }}-windows-x86_64-lib.zip
           ffmpeg-${{ steps.version.outputs.current }}-windows-i686-static.zip
           ffmpeg-${{ steps.version.outputs.current }}-windows-i686-static-lib.zip
+          ffmpeg-${{ steps.version.outputs.current }}-windows-i686-static-installer.msi

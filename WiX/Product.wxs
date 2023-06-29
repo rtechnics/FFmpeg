@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-	<Product Id="*" Name="FFmpeg" Language="1033" Version="1.0.0.0" Manufacturer="R-Technics" UpgradeCode="36264ec2-e802-4f52-986c-868be4ac48ac">
+	<Product Id="*" Name="FFmpeg" Language="1033" Version="$(var.Version)" Manufacturer="R-Technics" UpgradeCode="36264ec2-e802-4f52-986c-868be4ac48ac">
 		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
 
 		<MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
