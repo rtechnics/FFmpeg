@@ -98,7 +98,7 @@ jobs:
     - name: Build WiX Project
       run: |
         cd WiX
-        msbuild WiX/ffmpeg.installer.wixproj /p:Configuration=Release /p:Version=${{ steps.version.outputs.current }}
+        msbuild ffmpeg.installer.wixproj /p:Configuration=Release /p:Version=${{ steps.version.outputs.current }}
     - name: Upload installer as artifact
       uses: actions/upload-artifact@v3
       with:
