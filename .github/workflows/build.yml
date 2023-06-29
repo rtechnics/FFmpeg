@@ -68,7 +68,7 @@ jobs:
     - name: Configure source
       run: |
         mkdir build
-        ./configure --arch=i686 --target-os=mingw32 --cross-prefix=i686-w64-mingw32- --enable-cross-compile --prefix=build --disable-doc --enable-openssl --extra-cflags="-Iopenssl-windows-i686/include" --extra-ldflags="-Lopenssl-windows-i686/lib64" --enable-static --disable-shared
+        ./configure --arch=i686 --target-os=mingw32 --cross-prefix=i686-w64-mingw32- --enable-cross-compile --prefix=build --disable-doc --enable-openssl --extra-cflags="-Iopenssl-windows-i686/include" --extra-ldflags="-Lopenssl-windows-i686/lib" --enable-static --disable-shared
     - name: Compile source
       run: make
     - name: Copy FFmpeg build
