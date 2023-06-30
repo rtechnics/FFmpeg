@@ -127,7 +127,7 @@ jobs:
       uses: actions/download-artifact@v3
       with:
         name: ffmpeg-windows-i686-static-signed
-        path: ffmpeg-windows-i686-static-signed
+        path: ffmpeg-windows-i686-static
     - name: Build WiX Project
       run: msbuild WiX/ffmpeg.installer.wixproj /p:Configuration=Release /p:Version=${{ steps.version.outputs.current }}
     - name: Upload installer as artifact
@@ -154,7 +154,7 @@ jobs:
       uses: actions/download-artifact@v3
       with:
         name: ffmpeg-windows-x86_64-signed
-        path: ffmpeg-windows-x86_64-signed
+        path: ffmpeg-windows-x86_64
     - name: Create NuGet package
       run: |
         cd NuGet
