@@ -28,9 +28,6 @@
 			<Component Id="ffmpeg" Guid="3153C8A9-A470-4583-9A3C-9DB43BEC5898">
 				<File Id="ffmpeg" Source="..\ffmpeg-windows-i686-static\bin\ffmpeg.exe" KeyPath="yes" />
 			</Component>
-			<Component Id="ffplay" Guid="15E744AC-7DA2-435C-BB8D-1BF20C4C874A">
-				<File Id="ffplay" Source="..\ffmpeg-windows-i686-static\bin\ffplay.exe" KeyPath="yes" />
-			</Component>
 			<Component Id="ffprobe" Guid="D4DF2A9A-6069-430E-B715-E387905F5DA5">
 				<File Id="ffprobe" Source="..\ffmpeg-windows-i686-static\bin\ffprobe.exe" KeyPath="yes" />
 			</Component>
