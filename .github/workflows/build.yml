@@ -78,9 +78,38 @@ jobs:
       with:
         name: ffmpeg-windows-i686-static
         path: FFmpeg/build
+  sign-builds:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    needs: [build-windows-x86_64, build-windows-i686-static]
+    steps:
+    - name: Download all builds
+      uses: actions/download-artifact@v3
+    - name: Setup dotnet
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 3.1.x
+    - name: Install AzureSignTool
+      run: dotnet tool install --global AzureSignTool
+    - name: Sign Files
+      run: |
+        Get-ChildItem -recurse -Include **.exe, **.dll | ForEach-Object {
+          $filePath = $_.FullName
+          & AzureSignTool sign -kvu "${{ secrets.AZURE_CERT_KEY_VAULT }}" -kvi "${{ secrets.AZURE_CLIENT_ID }}" -kvs "${{ secrets.AZURE_CLIENT_SECRET }}" -kvc "${{ secrets.AZURE_CODE_SIGNING_CERT }}" -tr http://timestamp.digicert.com -v $filePath
+        }
+    - name: Upload Windows i686 static signed build as artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: ffmpeg-windows-i686-static-signed
+        path: ffmpeg-windows-i686-static
+    - name: Upload Windows x86_64 signed build as artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: ffmpeg-windows-x86_64-signed
+        path: ffmpeg-windows-x86_64
   create-windows-i686-static-installer-wix:
     runs-on: windows-latest
-    needs: [build-windows-x86_64, build-windows-i686-static]
+    needs: [sign-builds]
     steps:
     - name: Clone build repo
       uses: actions/checkout@v3
@@ -94,8 +123,11 @@ jobs:
         $latestTag = git describe --tags
         $current = $latestTag.Substring(1)
         echo "current=$current" >> $env:GITHUB_OUTPUT
-    - name: Download all builds
+    - name: Download Windows i686 static build
       uses: actions/download-artifact@v3
+      with:
+        name: ffmpeg-windows-i686-static-signed
+        path: ffmpeg-windows-i686-static-signed
     - name: Build WiX Project
       run: msbuild WiX/ffmpeg.installer.wixproj /p:Configuration=Release /p:Version=${{ steps.version.outputs.current }}
     - name: Upload installer as artifact
@@ -103,12 +135,78 @@ jobs:
       with:
         name: ffmpeg-windows-i686-static-installer
         path: WiX/bin/Release
+  create-windows-x86_64-nuget:
+    runs-on: ubuntu-latest
+    needs: [sign-builds]
+    steps:
+    - name: Clone build repo
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - name: Get current version
+      id: version
+      run: echo "current=$(git describe --tags | cut -c 2-)" >> "$GITHUB_OUTPUT"
+    - name: Setup dotnet
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 3.1.x
+    - name: Download Windows x86_64 build
+      uses: actions/download-artifact@v3
+      with:
+        name: ffmpeg-windows-x86_64-signed
+        path: ffmpeg-windows-x86_64-signed
+    - name: Create NuGet package
+      run: |
+        cd NuGet
+        dotnet build --configuration release -o nuget /p:Version=${{ steps.version.outputs.current }}
+    - name: Upload NuGet package as artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: ffmpeg-windows-x86_64-nuget
+        path: nuget
+  sign-packages:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    needs: [create-windows-i686-static-installer-wix, create-windows-x86_64-nuget]
+    steps:
+    - name: Download Windows i686 static installer
+      uses: actions/download-artifact@v3
+      with:
+        name: ffmpeg-windows-i686-static-installer
+        path: ffmpeg-windows-i686-static-installer
+    - name: Download Windows x86_64 NuGet
+      uses: actions/download-artifact@v3
+      with:
+        name: ffmpeg-windows-x86_64-nuget
+        path: ffmpeg-windows-x86_64-nuget
+    - name: Setup dotnet
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 3.1.x
+    - name: Install AzureSignTool
+      run: dotnet tool install --global AzureSignTool
+    - name: Sign Files
+      run: |
+        Get-ChildItem -recurse -Include **.msi, **.nupkg | ForEach-Object {
+          $filePath = $_.FullName
+          & AzureSignTool sign -kvu "${{ secrets.AZURE_CERT_KEY_VAULT }}" -kvi "${{ secrets.AZURE_CLIENT_ID }}" -kvs "${{ secrets.AZURE_CLIENT_SECRET }}" -kvc "${{ secrets.AZURE_CODE_SIGNING_CERT }}" -tr http://timestamp.digicert.com -v $filePath
+        }
+    - name: Upload Windows i686 static signed installer as artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: ffmpeg-windows-i686-static-installer-signed
+        path: ffmpeg-windows-i686-static-installer
+    - name: Upload Windows x86_64 signed NuGet package as artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: ffmpeg-windows-x86_64-nuget-signed
+        path: ffmpeg-windows-x86_64-nuget
   create-release:
     permissions:
       contents: write
       packages: write
     runs-on: ubuntu-latest
-    needs: [build-windows-x86_64, build-windows-i686-static, create-windows-i686-static-installer-wix]
+    needs: [sign-packages]
     timeout-minutes: 30
     steps:
     - name: Clone build repo
@@ -118,30 +216,44 @@ jobs:
     - name: Get current version
       id: version
       run: echo "current=$(git describe --tags | cut -c 2-)" >> "$GITHUB_OUTPUT"
-    - name: Download all builds
+    - name: Download Windows x86_64 build
       uses: actions/download-artifact@v3
+      with:
+        name: ffmpeg-windows-x86_64-signed
+        path: ffmpeg-windows-x86_64-signed
+    - name: Download Windows i686 static build
+      uses: actions/download-artifact@v3
+      with:
+        name: ffmpeg-windows-i686-static-signed
+        path: ffmpeg-windows-i686-static-signed
+    - name: Download Windows i686 static installer
+      uses: actions/download-artifact@v3
+      with:
+        name: ffmpeg-windows-i686-static-installer-signed
+        path: ffmpeg-windows-i686-static-installer-signed
+    - name: Download Windows x86_64 NuGet package
+      uses: actions/download-artifact@v3
+      with:
+        name: ffmpeg-windows-x86_64-nuget-signed
+        path: ffmpeg-windows-x86_64-nuget-signed
     - name: Setup dotnet
       uses: actions/setup-dotnet@v3
       with:
         dotnet-version: 3.1.x
-    - name: Create NuGet package
-      run: |
-        cd NuGet
-        dotnet build --configuration release -o nuget /p:Version=${{ steps.version.outputs.current }}
     - name: Push NuGet package
       run: |
         cd NuGet
         dotnet nuget add source --username ${{ github.repository_owner }} --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
-        dotnet nuget push nuget/ffmpeg.*.nupkg --no-symbols --skip-duplicate --api-key $NUGET_AUTH_TOKEN --source "github"
+        dotnet nuget push ffmpeg-windows-x86_64-nuget-signed/ffmpeg.*.nupkg --no-symbols --skip-duplicate --api-key $NUGET_AUTH_TOKEN --source "github"
       env:
         NUGET_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Package FFmpeg for release
       run: |
-        zip -r -j ffmpeg-${{ steps.version.outputs.current }}-windows-x86_64.zip ffmpeg-windows-x86_64/bin
-        zip -r ffmpeg-${{ steps.version.outputs.current }}-windows-x86_64-lib.zip ffmpeg-windows-x86_64
-        zip -r -j ffmpeg-${{ steps.version.outputs.current }}-windows-i686-static.zip ffmpeg-windows-i686-static/bin
-        zip -r ffmpeg-${{ steps.version.outputs.current }}-windows-i686-static-lib.zip ffmpeg-windows-i686-static
-        mv ffmpeg-windows-i686-static-installer/ffmpeg_installer.msi ffmpeg-${{ steps.version.outputs.current }}-windows-i686-static-installer.msi
+        zip -r -j ffmpeg-${{ steps.version.outputs.current }}-windows-x86_64.zip ffmpeg-windows-x86_64-signed/bin
+        zip -r ffmpeg-${{ steps.version.outputs.current }}-windows-x86_64-lib.zip ffmpeg-windows-x86_64-signed
+        zip -r -j ffmpeg-${{ steps.version.outputs.current }}-windows-i686-static.zip ffmpeg-windows-i686-static-signed/bin
+        zip -r ffmpeg-${{ steps.version.outputs.current }}-windows-i686-static-lib.zip ffmpeg-windows-i686-static-signed
+        mv ffmpeg-windows-i686-static-installer-signed/ffmpeg_installer.msi ffmpeg-${{ steps.version.outputs.current }}-windows-i686-static-installer.msi
     - name: Create GitHub release with packages
       uses: softprops/action-gh-release@v1
       with:
