@@ -91,14 +91,13 @@ jobs:
     - name: Get current version
       id: version
       run: |
-        ls -R
         $latestTag = git describe --tags
         $current = $latestTag.Substring(1)
         echo "current=$current" >> $env:GITHUB_OUTPUT
+    - name: Download all builds
+      uses: actions/download-artifact@v3
     - name: Build WiX Project
-      run: |
-        cd WiX
-        msbuild ffmpeg.installer.wixproj /p:Configuration=Release /p:Version=${{ steps.version.outputs.current }}
+      run: msbuild WiX/ffmpeg.installer.wixproj /p:Configuration=Release /p:Version=${{ steps.version.outputs.current }}
     - name: Upload installer as artifact
       uses: actions/upload-artifact@v3
       with:
