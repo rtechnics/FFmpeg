@@ -220,22 +220,22 @@ jobs:
       uses: actions/download-artifact@v3
       with:
         name: ffmpeg-windows-x86_64-signed
-        path: ffmpeg-windows-x86_64-signed
+        path: ffmpeg-windows-x86_64
     - name: Download Windows i686 static build
       uses: actions/download-artifact@v3
       with:
         name: ffmpeg-windows-i686-static-signed
-        path: ffmpeg-windows-i686-static-signed
+        path: ffmpeg-windows-i686-static
     - name: Download Windows i686 static installer
       uses: actions/download-artifact@v3
       with:
         name: ffmpeg-windows-i686-static-installer-signed
-        path: ffmpeg-windows-i686-static-installer-signed
+        path: ffmpeg-windows-i686-static-installer
     - name: Download Windows x86_64 NuGet package
       uses: actions/download-artifact@v3
       with:
         name: ffmpeg-windows-x86_64-nuget-signed
-        path: ffmpeg-windows-x86_64-nuget-signed
+        path: ffmpeg-windows-x86_64-nuget
     - name: Setup dotnet
       uses: actions/setup-dotnet@v3
       with:
@@ -244,16 +244,16 @@ jobs:
       run: |
         cd NuGet
         dotnet nuget add source --username ${{ github.repository_owner }} --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
-        dotnet nuget push ffmpeg-windows-x86_64-nuget-signed/ffmpeg.*.nupkg --no-symbols --skip-duplicate --api-key $NUGET_AUTH_TOKEN --source "github"
+        dotnet nuget push ffmpeg-windows-x86_64-nuget/ffmpeg.*.nupkg --no-symbols --skip-duplicate --api-key $NUGET_AUTH_TOKEN --source "github"
       env:
         NUGET_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Package FFmpeg for release
       run: |
-        zip -r -j ffmpeg-${{ steps.version.outputs.current }}-windows-x86_64.zip ffmpeg-windows-x86_64-signed/bin
-        zip -r ffmpeg-${{ steps.version.outputs.current }}-windows-x86_64-lib.zip ffmpeg-windows-x86_64-signed
-        zip -r -j ffmpeg-${{ steps.version.outputs.current }}-windows-i686-static.zip ffmpeg-windows-i686-static-signed/bin
-        zip -r ffmpeg-${{ steps.version.outputs.current }}-windows-i686-static-lib.zip ffmpeg-windows-i686-static-signed
-        mv ffmpeg-windows-i686-static-installer-signed/ffmpeg_installer.msi ffmpeg-${{ steps.version.outputs.current }}-windows-i686-static-installer.msi
+        zip -r -j ffmpeg-${{ steps.version.outputs.current }}-windows-x86_64.zip ffmpeg-windows-x86_64/bin
+        zip -r ffmpeg-${{ steps.version.outputs.current }}-windows-x86_64-lib.zip ffmpeg-windows-x86_64
+        zip -r -j ffmpeg-${{ steps.version.outputs.current }}-windows-i686-static.zip ffmpeg-windows-i686-static/bin
+        zip -r ffmpeg-${{ steps.version.outputs.current }}-windows-i686-static-lib.zip ffmpeg-windows-i686-static
+        mv ffmpeg-windows-i686-static-installer/ffmpeg_installer.msi ffmpeg-${{ steps.version.outputs.current }}-windows-i686-static-installer.msi
     - name: Create GitHub release with packages
       uses: softprops/action-gh-release@v1
       with:
