@@ -163,7 +163,7 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: ffmpeg-windows-x86_64-nuget
-        path: nuget
+        path: NuGet/nuget
   sign-packages:
     runs-on: windows-latest
     timeout-minutes: 30
