@@ -183,14 +183,21 @@ jobs:
       uses: actions/setup-dotnet@v3
       with:
         dotnet-version: 3.1.x
-    - name: Install AzureSignTool
-      run: dotnet tool install --global AzureSignTool
+    - name: Install signing tools
+      run: |
+        dotnet tool install --global AzureSignTool
+        dotnet tool install --global NuGetKeyVaultSignTool
     - name: Sign Files
       run: |
-        Get-ChildItem -recurse -Include **.msi, **.nupkg | ForEach-Object {
+        Get-ChildItem -recurse -Include **.msi | ForEach-Object {
           $filePath = $_.FullName
           & AzureSignTool sign -kvu "${{ secrets.AZURE_CERT_KEY_VAULT }}" -kvi "${{ secrets.AZURE_CLIENT_ID }}" -kvs "${{ secrets.AZURE_CLIENT_SECRET }}" -kvc "${{ secrets.AZURE_CODE_SIGNING_CERT }}" -kvt "${{ secrets.AZURE_TENANT_ID }}" -tr http://timestamp.digicert.com -v $filePath
         }
+        Get-ChildItem -recurse -Include **.nupkg | ForEach-Object {
+          $filePath = $_.FullName
+          & NuGetKeyVaultSignTool sign --file-digest sha256 --timestamp-digest sha256 --azure-key-vault-url "${{ secrets.AZURE_CERT_KEY_VAULT }}" --azure-key-vault-client-id "${{ secrets.AZURE_CLIENT_ID }}" --azure-key-vault-client-secret "${{ secrets.AZURE_CLIENT_SECRET }}" --azure-key-vault-certificate "${{ secrets.AZURE_CODE_SIGNING_CERT }}" --azure-key-vault-tenant-id "${{ secrets.AZURE_TENANT_ID }}" --timestamp-rfc3161 http://timestamp.digicert.com $filePath
+        }
+
     - name: Upload Windows i686 static signed installer as artifact
       uses: actions/upload-artifact@v3
       with:
