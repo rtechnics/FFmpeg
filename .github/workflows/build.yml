@@ -251,7 +251,7 @@ jobs:
       run: |
         cd NuGet
         dotnet nuget add source --username ${{ github.repository_owner }} --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
-        dotnet nuget push ffmpeg-windows-x86_64-nuget/ffmpeg.*.nupkg --no-symbols --skip-duplicate --api-key $NUGET_AUTH_TOKEN --source "github"
+        dotnet nuget push ../ffmpeg-windows-x86_64-nuget/ffmpeg.*.nupkg --no-symbols --skip-duplicate --api-key $NUGET_AUTH_TOKEN --source "github"
       env:
         NUGET_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Package FFmpeg for release
