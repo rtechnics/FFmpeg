@@ -20,7 +20,7 @@ jobs:
         cd FFmpeg
         currenttag=$(git describe --tags)
         echo "Current version: $currenttag"
-        latesttag=$(git tag | grep -E '^n[0-9]\d*\.[0-9]\d*(\.[0-9]\d*)?$' | tail -n1)
+        latesttag=$(git tag | grep -E '^n[0-9]+\.[0-9]+(\.[0-9]+)?$' | sort -V | tail -n1)
         echo "Latest version: $latesttag"
         if [[ "$currenttag" != "$latesttag" ]]; then
           echo "Updating repo..."
