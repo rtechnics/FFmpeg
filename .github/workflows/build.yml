@@ -19,7 +19,7 @@ jobs:
       run: | 
         sudo apt update
         sudo apt install cmake libass-dev libgnutls28-dev libmp3lame-dev libsdl2-dev libva-dev libvdpau-dev libvorbis-dev libxcb-xfixes0-dev meson ninja-build yasm mingw-w64 mingw-w64-tools libunistring-dev
-    - name: Download prebuilt OpenSSL binaries
+    - name: Download prebuilt OpenSSL libraries
       uses: robinraju/release-downloader@v1.8
       with:
         repository: ${{ github.repository_owner }}/openssl
@@ -28,10 +28,28 @@ jobs:
         fileName: "openssl-*-windows-x86_64-lib.zip"
         out-file-path: FFmpeg
         extract: true
+    - name: Download prebuilt libvpx libraries
+      uses: robinraju/release-downloader@v1.8
+      with:
+        repository: ${{ github.repository_owner }}/ffmpeg-libvpx
+        token: ${{secrets.PUSH_TOKEN}}
+        latest: true
+        fileName: "libvpx-*-windows-x86_64.zip"
+        out-file-path: FFmpeg
+        extract: true
+    - name: Download prebuilt opus libraries
+      uses: robinraju/release-downloader@v1.8
+      with:
+        repository: ${{ github.repository_owner }}/ffmpeg-libopus
+        token: ${{secrets.PUSH_TOKEN}}
+        latest: true
+        fileName: "opus-*-windows-x86_64.zip"
+        out-file-path: FFmpeg
+        extract: true
     - name: Configure source
       run: |
         mkdir build
-        ./configure --arch=x86_64 --target-os=mingw64 --cross-prefix=x86_64-w64-mingw32- --enable-cross-compile --prefix=build --disable-doc --enable-openssl --extra-cflags="-Iopenssl-windows-x86_64/include" --extra-ldflags="-Lopenssl-windows-x86_64/lib64"
+        ./configure --arch=x86_64 --target-os=mingw64 --cross-prefix=x86_64-w64-mingw32- --enable-cross-compile --prefix=build --disable-doc --enable-openssl --extra-cflags="-Iopenssl-windows-x86_64/include -Ilibvpx-windows-x86_64/include -Iopus-windows-x86_64/include" --extra-ldflags="-Lopenssl-windows-x86_64/lib64 -Llibvpx-windows-x86_64/lib -Lopus-windows-x86_64/lib" --enable-gpl --enable-version3 --enable-libvpx --enable-libopus
     - name: Compile source
       run: make
     - name: Copy FFmpeg build
@@ -65,10 +83,28 @@ jobs:
         fileName: "openssl-*-windows-i686-lib.zip"
         out-file-path: FFmpeg
         extract: true
+    - name: Download prebuilt libvpx libraries
+      uses: robinraju/release-downloader@v1.8
+      with:
+        repository: ${{ github.repository_owner }}/ffmpeg-libvpx
+        token: ${{secrets.PUSH_TOKEN}}
+        latest: true
+        fileName: "libvpx-*-windows-i686.zip"
+        out-file-path: FFmpeg
+        extract: true
+    - name: Download prebuilt opus libraries
+      uses: robinraju/release-downloader@v1.8
+      with:
+        repository: ${{ github.repository_owner }}/ffmpeg-libopus
+        token: ${{secrets.PUSH_TOKEN}}
+        latest: true
+        fileName: "opus-*-windows-i686.zip"
+        out-file-path: FFmpeg
+        extract: true
     - name: Configure source
       run: |
         mkdir build
-        ./configure --arch=i686 --target-os=mingw32 --cross-prefix=i686-w64-mingw32- --enable-cross-compile --prefix=build --disable-doc --enable-openssl --extra-cflags="-Iopenssl-windows-i686/include" --extra-ldflags="-Lopenssl-windows-i686/lib" --enable-static --disable-shared
+        ./configure --arch=i686 --target-os=mingw32 --cross-prefix=i686-w64-mingw32- --enable-cross-compile --prefix=build --disable-doc --enable-openssl --extra-cflags="-Iopenssl-windows-i686/include  -Ilibvpx-windows-i686/include -Iopus-windows-i686/include" --extra-ldflags="-Lopenssl-windows-i686/lib  -Llibvpx-windows-i686/lib -Lopus-windows-i686/lib" --enable-static --disable-shared --enable-gpl --enable-version3 --enable-libvpx --enable-libopus
     - name: Compile source
       run: make
     - name: Copy FFmpeg build
