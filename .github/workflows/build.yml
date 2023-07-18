@@ -49,7 +49,7 @@ jobs:
     - name: Configure source
       run: |
         mkdir build
-        ./configure --arch=x86_64 --target-os=mingw64 --cross-prefix=x86_64-w64-mingw32- --enable-cross-compile --prefix=build --disable-doc --enable-openssl --extra-cflags="-Iopenssl-windows-x86_64/include -Ilibvpx-windows-x86_64/include -Iopus-windows-x86_64/include" --extra-ldflags="-Lopenssl-windows-x86_64/lib64 -Llibvpx-windows-x86_64/lib -Lopus-windows-x86_64/lib" --enable-gpl --enable-version3 --enable-libvpx --enable-libopus
+        ./configure --arch=x86_64 --target-os=mingw64 --cross-prefix=x86_64-w64-mingw32- --enable-cross-compile --prefix=build --disable-doc --enable-openssl --extra-cflags="-Iopenssl-windows-x86_64/include -Ilibvpx-windows-x86_64/include -Iopus-windows-x86_64/include" --extra-ldflags="-Lopenssl-windows-x86_64/lib64 -Llibvpx-windows-x86_64/lib -Lopus-windows-x86_64/lib" --enable-gpl --enable-version3 --enable-libvpx
     - name: Compile source
       run: make
     - name: Copy FFmpeg build
